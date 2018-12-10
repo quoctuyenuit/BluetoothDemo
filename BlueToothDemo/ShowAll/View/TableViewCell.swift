@@ -144,9 +144,9 @@ class TableViewCell: UITableViewCell {
     public func updateData(for model: PeripheralDevice) {
         
         if let name = model.peripheralDevice.name, !name.isEmpty {
-            self.nameLabel.text = name
+            self.nameLabel.text = "\(name) - \(model.serialString)"
         } else {
-            self.nameLabel.text = "unknown"
+            self.nameLabel.text = "Unknown - \(model.serialString)"
         }
         
         switch model.peripheralDevice.state {

@@ -251,23 +251,33 @@ extension ShowAllViewController: CBCentralManagerDelegate {
             print("central state is powered off")
         case .poweredOn:
             print("central state is powered on")
-            central.scanForPeripherals(withServices: [kDEVICE_INFORMATION_SERVICE_CBUUID, kHEART_RATE_SERVICE_CBUUID, kSHINE_MISFIT_SERVICE_BUUID])
+            central.scanForPeripherals(withServices: [kDEVICE_INFORMATION_SERVICE_CBUUID,
+                                                      kHEART_RATE_SERVICE_CBUUID,
+                                                      kSHINE_MISFIT_SERVICE_BUUID])
         }
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        //Find serial string of peripheral
+        var serialString: String = "Unknown"
+        if let manufacturerData = advertisementData["kCBAdvDataManufacturerData"] as? Data {
+            assert(manufacturerData.count >= 11)
+            let serial = manufacturerData.subdata(in: 2..<12)
+            let data = Data(bytes: serial)
+            serialString = String(data: data, encoding: .utf8) ?? "Unknown"
+        }
+        let newPeripheralDevice = PeripheralDevice(peripheral: peripheral, rssi: RSSI, serial: serialString)
         
-        print(peripheral)
-        let newPeripheralDevice = PeripheralDevice(peripheral: peripheral, rssi: RSSI)
-        
+        //update item's rssi
         let index = self.listDisconnectedItems.lastIndex(where: { $0.peripheralDevice.identifier == newPeripheralDevice.peripheralDevice.identifier })
+        
         if let alreadyIndex = index {
             self.listDisconnectedItems[alreadyIndex].rssi = RSSI
         } else {
             self.listDisconnectedItems.append(newPeripheralDevice)
         }
         
-        
+        //Sort list of items
         if self.isSorted {
             listDisconnectedItems = listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
         } else {

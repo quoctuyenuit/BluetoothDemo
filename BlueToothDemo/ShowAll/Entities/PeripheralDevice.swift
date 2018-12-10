@@ -10,17 +10,15 @@ import Foundation
 import CoreBluetooth
 
 class PeripheralDevice {
-    var time: Date
     var isFavorite: Bool
     var peripheralDevice: CBPeripheral
     var rssi: NSNumber
-    var turnNeedleCharacteristic: CBCharacteristic?
-    var serialString: String?
+    var serialString: String
     
-    init(peripheral: CBPeripheral, rssi: NSNumber, time: Date = Date(), isFavorite: Bool = false) {
+    init(peripheral: CBPeripheral, rssi: NSNumber, serial: String = "Unknown", isFavorite: Bool = false) {
         self.peripheralDevice = peripheral
         self.isFavorite = isFavorite
-        self.time = time
         self.rssi = rssi
+        self.serialString = serial
     }
 }
