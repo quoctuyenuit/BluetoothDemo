@@ -27,6 +27,7 @@ import ExternalAccessory
  /
  */
 protocol ShowAllViewDelegate {
+    //To update status of the detail view
     func showAllView(didChangeStatus status: CBPeripheralState)
 }
 
@@ -107,9 +108,15 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     
     @objc private func filterTapped(_ sender: UIButton) {
         self._listFavoriteDisconnectedItems.removeAll()
+        self._listFavoriteConnectedItems.removeAll()
         self._listDisconnectedItems.forEach {
             if $0.isFavorite {
                 self._listFavoriteDisconnectedItems.append($0)
+            }
+        }
+        self._listConnectedItems.forEach {
+            if $0.isFavorite {
+                self._listFavoriteConnectedItems.append($0)
             }
         }
         self._isFilterFavorite = !self._isFilterFavorite
@@ -179,7 +186,6 @@ extension ShowAllViewController: UITableViewDelegate {
             model = self._isFilterFavorite ? self._listFavoriteDisconnectedItems[indexPath.row] : self._listDisconnectedItems[indexPath.row]
         }
         
-        
         self.delegate = self.presenter?.showDetailPeripheralDevice(from: self, item: model)
         self._centralManager.stopScan()
         self._centralManager.connect(model.peripheralDevice)
@@ -209,28 +215,14 @@ extension ShowAllViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = self.tableView.dequeueReusableCell(withIdentifier: self._reuseIdentifier, for: indexPath) as? TableViewCell else {
-            return UITableViewCell()
-        }
+        let cell = self.tableView.dequeueReusableCell(withIdentifier: self._reuseIdentifier, for: indexPath) as! TableViewCell
+        let section = indexPath.section
         
-        var listItems: [PeripheralDevice]
-        var listFavoriteItems: [PeripheralDevice]
+        var listItems = section == 0 ? self._listConnectedItems : self._listDisconnectedItems
+        var listFavoriteItems = section == 0 ? self._listFavoriteConnectedItems : self._listFavoriteDisconnectedItems
+        let model = self._isFilterFavorite ? listFavoriteItems[indexPath.row] : listItems[indexPath.row]
         
-        if indexPath.section == 0 {
-            listItems = self._listConnectedItems
-            listFavoriteItems = self._listFavoriteConnectedItems
-        } else {
-            listItems = self._listDisconnectedItems
-            listFavoriteItems = self._listFavoriteDisconnectedItems
-        }
-        
-        if !self._isFilterFavorite {
-            let model = listItems[indexPath.row]
-            cell.configCell(for: model)
-        } else {
-            let model = listFavoriteItems[indexPath.row]
-            cell.configCell(for: model)
-        }
+        cell.configCell(for: model)
 
         return cell
     }
@@ -279,9 +271,9 @@ extension ShowAllViewController: CBCentralManagerDelegate {
         
         //Sort list of items
         if self._isSorted {
-            _listDisconnectedItems = _listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
+            self._listDisconnectedItems = self._listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
         } else {
-            _listDisconnectedItems = _listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedDescending })
+            self._listDisconnectedItems = self._listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedDescending })
         }
         self.tableView.reloadData()
     }

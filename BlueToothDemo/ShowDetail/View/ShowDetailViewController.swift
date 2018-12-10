@@ -18,10 +18,19 @@ import CoreBluetooth
  
  - model: biến chứa thông tin item cần show detail
  
- - CHARACTERISTIC_MISFIT_BUUID: BUUID để lọc characteristic xoay kim
+ - kCHARACTERISTIC_MISFIT_BUUID: BUUID để lọc characteristic xoay kim
+ 
+ - kDEVICE_INFORMATION_MANUFACTURER_NAME_STRING: BUUID để lấy thông Manufacturer name
+ 
+ - kDEVICE_INFORMATION_SERIAL_VERSION_STRING: BUUID để lấy serial number
+ 
+ - kDEVICE_INFORMATION_FW_REVISION_STRING: BUUID để lấy Firmware Revision string
+ 
+ - _turnNeedleCharacteristic: Characteristic xoay kim đồng hồ dùng để lưu lại khi cần write command xoay kim
  */
 
 protocol ShowDetailViewDelegate {
+    //To change state of the peripheral device by Central Manager
     func showDetailView(willChangeState state: CBPeripheralState, for peripheral: CBPeripheral)
 }
 
@@ -30,46 +39,51 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     //MARK: - Common properties
     var presenter: ShowDetailPresenterProtocol?
     public var delegate: ShowDetailViewDelegate?
-    var model: PeripheralDevice!
+    private var _model: PeripheralDevice!
     private static let LINE_GAP: CGFloat = 10
     private static let PADDING: CGFloat = 30
     private let kCHARACTERISTIC_MISFIT_BUUID = CBUUID(nsuuid: UUID(uuidString: "3dda0002-957f-7d4a-34a6-74696673696d")!)
     private let kDEVICE_INFORMATION_MANUFACTURER_NAME_STRING = CBUUID(string: "2A29")
     private let kDEVICE_INFORMATION_SERIAL_VERSION_STRING = CBUUID(string: "2A25")
-    private let kDEVICE_INFORMATION_MODEL_NUMBER_STRING = CBUUID(string: "2A24")
     private let kDEVICE_INFORMATION_FW_REVISION_STRING = CBUUID(string: "2A26")
-    private let kDEVICE_INFORMATION_SYSTEM_ID = CBUUID(string: "2A23")
     
     private var _turnNeedleCharacteristic: CBCharacteristic?
     
     private lazy var _nameLabel: UILabel = {
         return setupLabelTitle(for: "Name:")
     }()
+    
     private lazy var _statusLabel: UILabel = {
         return setupLabelTitle(for: "Status:")
     }()
+    
     private lazy var _serialLabel: UILabel = {
         return setupLabelTitle(for: "Serial:")
     }()
+    
     private lazy var _macAddressLabel: UILabel = {
         return setupLabelTitle(for: "Mac Address:")
     }()
+    
     private lazy var _deviceFamilyLabel: UILabel = {
         return setupLabelTitle(for: "Device Family:")
     }()
+    
     private lazy var _fwVersionLabel: UILabel = {
         return setupLabelTitle(for: "FW version:")
     }()
+    
     private lazy var _uAppVersionLabel: UILabel = {
         return setupLabelTitle(for: "uApp version:")
     }()
     
     
     private lazy var _name: UILabel = {
-        return setupLabelTitle(for: self.model.peripheralDevice.name ?? "Unknown")
+        return setupLabelTitle(for: self._model.peripheralDevice.name ?? "Unknown")
     }()
+    
     private lazy var _status: UILabel = {
-        switch self.model.peripheralDevice.state {
+        switch self._model.peripheralDevice.state {
         case .disconnected:
             return setupLabelTitle(for: "Disconnected")
         case .connecting:
@@ -81,18 +95,23 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
         }
         
     }()
+    
     private lazy var _serial: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
+    
     private lazy var _macAddress: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
+    
     private lazy var _deviceFamily: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
+    
     private lazy var _fwVersion: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
+    
     private lazy var _uAppVersion: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
@@ -105,6 +124,7 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
         btn.addTarget(self, action: #selector(turnTheNeedle(_:)), for: .touchUpInside)
         return btn
     }()
+    
     private lazy var _changeConnectStateButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("Cancel Connect", for: .normal)
@@ -121,22 +141,22 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     
     @objc private func turnTheNeedle(_ sender: UIButton) {
         guard let characteristic = self._turnNeedleCharacteristic else { return }
-        self.presenter?.writeCommandSample(to: self.model.peripheralDevice, for: characteristic)
+        self.presenter?.writeCommandSample(to: self._model.peripheralDevice, for: characteristic)
     }
     
     @objc private func changeConnectTapped(_ sender: UIButton) {
-        switch self.model.peripheralDevice.state {
+        switch self._model.peripheralDevice.state {
         case .disconnected:
-            self.delegate?.showDetailView(willChangeState: .connected, for: self.model.peripheralDevice)
+            self.delegate?.showDetailView(willChangeState: .connected, for: self._model.peripheralDevice)
             self._status.text = "Connecting"
         case .connecting:
-            self.delegate?.showDetailView(willChangeState: .disconnected, for: self.model.peripheralDevice)
+            self.delegate?.showDetailView(willChangeState: .disconnected, for: self._model.peripheralDevice)
             self._status.text = "Disconnecting"
         case .connected:
-            self.delegate?.showDetailView(willChangeState: .disconnected, for: self.model.peripheralDevice)
+            self.delegate?.showDetailView(willChangeState: .disconnected, for: self._model.peripheralDevice)
             self._status.text = "Disconnecting"
         case .disconnecting:
-            self.delegate?.showDetailView(willChangeState: .connected, for: self.model.peripheralDevice)
+            self.delegate?.showDetailView(willChangeState: .connected, for: self._model.peripheralDevice)
             self._status.text = "Connecting"
         }
     }
@@ -153,7 +173,7 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     }
     
     private func setupView() {
-        self.view.backgroundColor = .white
+        self.view.backgroundColor = UIColor.white
         self.view.addSubview(self._titleBound)
         self.view.addSubview(self._contentBound)
         self.view.addSubview(self._turnTheNeedleButton)
@@ -286,8 +306,8 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     //MARK: - Initialization
     convenience init(for model: PeripheralDevice) {
         self.init(nibName: nil, bundle: nil)
-        self.model = model
-        self.model.peripheralDevice.delegate = self
+        self._model = model
+        self._model.peripheralDevice.delegate = self
     }
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
