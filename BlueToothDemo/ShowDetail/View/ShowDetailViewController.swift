@@ -128,12 +128,16 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
         switch self.model.peripheralDevice.state {
         case .disconnected:
             self.delegate?.showDetailView(willChangeState: .connected, for: self.model.peripheralDevice)
+            self.status.text = "Connecting"
         case .connecting:
             self.delegate?.showDetailView(willChangeState: .disconnected, for: self.model.peripheralDevice)
+            self.status.text = "Disconnecting"
         case .connected:
             self.delegate?.showDetailView(willChangeState: .disconnected, for: self.model.peripheralDevice)
+            self.status.text = "Disconnecting"
         case .disconnecting:
             self.delegate?.showDetailView(willChangeState: .connected, for: self.model.peripheralDevice)
+            self.status.text = "Connecting"
         }
     }
     
@@ -342,9 +346,6 @@ extension ShowDetailViewController: CBPeripheralDelegate {
             guard let data = characteristic.value else { return }
             let manufacturerNameString = String(data: data, encoding: .utf8)
             self.fwVersion.text = manufacturerNameString
-        case kDEVICE_INFORMATION_SYSTEM_ID:
-            guard let data = characteristic.value else { return }
-//            self.uAppVersion.text = manufacturerNameString
         default:
             break
         }
