@@ -14,7 +14,7 @@ class ShowAllPresenter: ShowAllPresenterProtocol {
     var interactor: ShowAllInteractorProtocol?
     var router: ShowAllRouterProtocol?
     
-    func selectElement(from viewController: UIViewController, item: PeripheralDevice) -> ShowAllViewDelegate? {
-        return self.router?.showDeviceInformationDetail(from: viewController, item: item)
+    func showDetailPeripheralDevice(from viewController: UIViewController, item: PeripheralDevice) -> ShowAllViewDelegate? {
+        return self.router?.showDetailPeripheralDevice(from: viewController, item: item)
     }
 }

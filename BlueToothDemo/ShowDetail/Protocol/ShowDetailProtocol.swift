@@ -18,9 +18,11 @@ protocol ShowDetailPresenterProtocol {
     var interactor: ShowDetailInteractorProtocol? { get set }
     var router: ShowDetailRouterProtocol? { get set }
     
+    //Write command to turn needle of the watch
     func writeCommandSample(to peripheralDevice: CBPeripheral, for characteristic: CBCharacteristic)
 }
 protocol ShowDetailInteractorProtocol {
+    //Write command to turn needle of the watch
     func writeCommandSample(to peripheralDevice: CBPeripheral, for characteristic: CBCharacteristic)
 }
 protocol ShowDetailRouterProtocol {

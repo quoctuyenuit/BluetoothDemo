@@ -34,8 +34,8 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     
     //MARK: - Common properties
     var presenter: ShowAllPresenterProtocol?
-    var centralManager: CBCentralManager!
-    final let reuseIdentifier = "ShowAllReuseIdentifier"
+    private var _centralManager: CBCentralManager!
+    private final let _reuseIdentifier = "ShowAllReuseIdentifier"
     
     
     let kSHINE_MISFIT_SERVICE_BUUID = CBUUID(nsuuid: UUID(uuidString: "3dda0001-957f-7d4a-34a6-74696673696d")!)
@@ -43,20 +43,20 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     let kHEART_RATE_SERVICE_CBUUID = CBUUID(string: "0x180D")
 
     
-    var listDisconnectedItems = [PeripheralDevice]()
-    var listFavoriteDisconnectedItems = [PeripheralDevice]()
-    var listConnectedItems = [PeripheralDevice]()
-    var listFavoriteConnectedItems = [PeripheralDevice]()
+    private var _listDisconnectedItems = [PeripheralDevice]()
+    private var _listFavoriteDisconnectedItems = [PeripheralDevice]()
+    private var _listConnectedItems = [PeripheralDevice]()
+    private var _listFavoriteConnectedItems = [PeripheralDevice]()
     
-    var delegate: ShowAllViewDelegate?
+    public var delegate: ShowAllViewDelegate?
     
-    var isFilterFavorite: Bool = false {
+    private var _isFilterFavorite: Bool = false {
         didSet {
             self.tableView.reloadData()
         }
     }
     
-    var isSorted: Bool = false {
+    private var _isSorted: Bool = false {
         didSet {
             self.tableView.reloadData()
         }
@@ -65,7 +65,7 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     //MARK: - View properties
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero)
-        table.register(TableViewCell.self, forCellReuseIdentifier: self.reuseIdentifier)
+        table.register(TableViewCell.self, forCellReuseIdentifier: self._reuseIdentifier)
         table.delegate = self
         table.dataSource = self
         table.rowHeight = UITableView.automaticDimension
@@ -95,7 +95,7 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     }()
     
     //MARK: - Setup view function
-    func setupView() {
+    private func setupView() {
         self.view.addSubview(self.tableView)
         self.tableView.snp.makeConstraints { (make) in
             make.edges.equalToSuperview()
@@ -106,13 +106,13 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     }
     
     @objc private func filterTapped(_ sender: UIButton) {
-        self.listFavoriteDisconnectedItems.removeAll()
-        self.listDisconnectedItems.forEach {
+        self._listFavoriteDisconnectedItems.removeAll()
+        self._listDisconnectedItems.forEach {
             if $0.isFavorite {
-                self.listFavoriteDisconnectedItems.append($0)
+                self._listFavoriteDisconnectedItems.append($0)
             }
         }
-        self.isFilterFavorite = !self.isFilterFavorite
+        self._isFilterFavorite = !self._isFilterFavorite
     }
     
     @objc private func refreshTapped(_ sender: UIButton) {
@@ -121,26 +121,26 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     
     private func refreshData() {
         self.retrieveConnectedDevice()
-        self.listDisconnectedItems.removeAll()
-        self.listFavoriteDisconnectedItems.removeAll()
+        self._listDisconnectedItems.removeAll()
+        self._listFavoriteDisconnectedItems.removeAll()
         self.tableView.reloadData()
-        self.centralManager.stopScan()
-        self.centralManager.scanForPeripherals(withServices: [kDEVICE_INFORMATION_SERVICE_CBUUID, kHEART_RATE_SERVICE_CBUUID, kSHINE_MISFIT_SERVICE_BUUID])
+        self._centralManager.stopScan()
+        self._centralManager.scanForPeripherals(withServices: [kDEVICE_INFORMATION_SERVICE_CBUUID, kHEART_RATE_SERVICE_CBUUID, kSHINE_MISFIT_SERVICE_BUUID])
     }
     
     @objc private func sortTapped(_ sender: UIButton) {
-        self.isSorted = !self.isSorted
-        if self.isSorted {
-            if !self.isFilterFavorite {
-                listDisconnectedItems = listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
+        self._isSorted = !self._isSorted
+        if self._isSorted {
+            if !self._isFilterFavorite {
+                _listDisconnectedItems = _listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
             } else {
-                listFavoriteDisconnectedItems = listFavoriteDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
+                _listFavoriteDisconnectedItems = _listFavoriteDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
             }
         } else {
-            if !self.isFilterFavorite {
-                listDisconnectedItems = listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedDescending })
+            if !self._isFilterFavorite {
+                _listDisconnectedItems = _listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedDescending })
             } else {
-                listFavoriteDisconnectedItems = listFavoriteDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedDescending })
+                _listFavoriteDisconnectedItems = _listFavoriteDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedDescending })
             }
         }
     }
@@ -149,7 +149,7 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.setupView()
-        self.centralManager = CBCentralManager(delegate: self, queue: nil)
+        self._centralManager = CBCentralManager(delegate: self, queue: nil)
         self.retrieveConnectedDevice()
     }
     
@@ -158,11 +158,11 @@ class ShowAllViewController: UIViewController, ShowAllViewProtocol {
     }
     
     private func retrieveConnectedDevice() {
-        self.listConnectedItems.removeAll()
+        self._listConnectedItems.removeAll()
         
-        self.centralManager.retrieveConnectedPeripherals(withServices: [kDEVICE_INFORMATION_SERVICE_CBUUID, kHEART_RATE_SERVICE_CBUUID, kSHINE_MISFIT_SERVICE_BUUID]).forEach { (peripheral) in
+        self._centralManager.retrieveConnectedPeripherals(withServices: [kDEVICE_INFORMATION_SERVICE_CBUUID, kHEART_RATE_SERVICE_CBUUID, kSHINE_MISFIT_SERVICE_BUUID]).forEach { (peripheral) in
             let device = PeripheralDevice(peripheral: peripheral, rssi: NSNumber(value: 0))
-            self.listConnectedItems.append(device)
+            self._listConnectedItems.append(device)
         }
     }
 }
@@ -174,15 +174,15 @@ extension ShowAllViewController: UITableViewDelegate {
         let section = indexPath.section
         var model: PeripheralDevice
         if section == 0 {
-            model = self.isFilterFavorite ? self.listFavoriteConnectedItems[indexPath.row] : self.listConnectedItems[indexPath.row]
+            model = self._isFilterFavorite ? self._listFavoriteConnectedItems[indexPath.row] : self._listConnectedItems[indexPath.row]
         } else {
-            model = self.isFilterFavorite ? self.listFavoriteDisconnectedItems[indexPath.row] : self.listDisconnectedItems[indexPath.row]
+            model = self._isFilterFavorite ? self._listFavoriteDisconnectedItems[indexPath.row] : self._listDisconnectedItems[indexPath.row]
         }
         
         
-        self.delegate = self.presenter?.selectElement(from: self, item: model)
-        self.centralManager.stopScan()
-        self.centralManager.connect(model.peripheralDevice)
+        self.delegate = self.presenter?.showDetailPeripheralDevice(from: self, item: model)
+        self._centralManager.stopScan()
+        self._centralManager.connect(model.peripheralDevice)
         self.tableView.reloadData()
     }
 }
@@ -190,9 +190,9 @@ extension ShowAllViewController: UITableViewDelegate {
 extension ShowAllViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
-            return self.isFilterFavorite ? self.listFavoriteConnectedItems.count : self.listConnectedItems.count
+            return self._isFilterFavorite ? self._listFavoriteConnectedItems.count : self._listConnectedItems.count
         } else {
-            return self.isFilterFavorite ? self.listFavoriteDisconnectedItems.count : self.listDisconnectedItems.count
+            return self._isFilterFavorite ? self._listFavoriteDisconnectedItems.count : self._listDisconnectedItems.count
         }
     }
     
@@ -209,7 +209,7 @@ extension ShowAllViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = self.tableView.dequeueReusableCell(withIdentifier: self.reuseIdentifier, for: indexPath) as? TableViewCell else {
+        guard let cell = self.tableView.dequeueReusableCell(withIdentifier: self._reuseIdentifier, for: indexPath) as? TableViewCell else {
             return UITableViewCell()
         }
         
@@ -217,19 +217,19 @@ extension ShowAllViewController: UITableViewDataSource {
         var listFavoriteItems: [PeripheralDevice]
         
         if indexPath.section == 0 {
-            listItems = self.listConnectedItems
-            listFavoriteItems = self.listFavoriteConnectedItems
+            listItems = self._listConnectedItems
+            listFavoriteItems = self._listFavoriteConnectedItems
         } else {
-            listItems = self.listDisconnectedItems
-            listFavoriteItems = self.listFavoriteDisconnectedItems
+            listItems = self._listDisconnectedItems
+            listFavoriteItems = self._listFavoriteDisconnectedItems
         }
         
-        if !self.isFilterFavorite {
+        if !self._isFilterFavorite {
             let model = listItems[indexPath.row]
-            cell.updateData(for: model)
+            cell.configCell(for: model)
         } else {
             let model = listFavoriteItems[indexPath.row]
-            cell.updateData(for: model)
+            cell.configCell(for: model)
         }
 
         return cell
@@ -269,19 +269,19 @@ extension ShowAllViewController: CBCentralManagerDelegate {
         let newPeripheralDevice = PeripheralDevice(peripheral: peripheral, rssi: RSSI, serial: serialString)
         
         //update item's rssi
-        let index = self.listDisconnectedItems.lastIndex(where: { $0.peripheralDevice.identifier == newPeripheralDevice.peripheralDevice.identifier })
+        let index = self._listDisconnectedItems.lastIndex(where: { $0.peripheralDevice.identifier == newPeripheralDevice.peripheralDevice.identifier })
         
         if let alreadyIndex = index {
-            self.listDisconnectedItems[alreadyIndex].rssi = RSSI
+            self._listDisconnectedItems[alreadyIndex].rssi = RSSI
         } else {
-            self.listDisconnectedItems.append(newPeripheralDevice)
+            self._listDisconnectedItems.append(newPeripheralDevice)
         }
         
         //Sort list of items
-        if self.isSorted {
-            listDisconnectedItems = listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
+        if self._isSorted {
+            _listDisconnectedItems = _listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedAscending })
         } else {
-            listDisconnectedItems = listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedDescending })
+            _listDisconnectedItems = _listDisconnectedItems.sorted(by: { $0.rssi.compare($1.rssi) == .orderedDescending })
         }
         self.tableView.reloadData()
     }
@@ -302,9 +302,9 @@ extension ShowAllViewController: ShowDetailViewDelegate {
     func showDetailView(willChangeState state: CBPeripheralState, for peripheral: CBPeripheral) {
         switch state {
         case .connected:
-            self.centralManager.connect(peripheral)
+            self._centralManager.connect(peripheral)
         case .disconnected:
-            self.centralManager.cancelPeripheralConnection(peripheral)
+            self._centralManager.cancelPeripheralConnection(peripheral)
         default:
             break
         }

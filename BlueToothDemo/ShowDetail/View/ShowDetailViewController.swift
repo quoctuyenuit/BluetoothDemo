@@ -40,35 +40,35 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     private let kDEVICE_INFORMATION_FW_REVISION_STRING = CBUUID(string: "2A26")
     private let kDEVICE_INFORMATION_SYSTEM_ID = CBUUID(string: "2A23")
     
-    private var turnNeedleCharacteristic: CBCharacteristic?
+    private var _turnNeedleCharacteristic: CBCharacteristic?
     
-    private lazy var nameLabel: UILabel = {
+    private lazy var _nameLabel: UILabel = {
         return setupLabelTitle(for: "Name:")
     }()
-    private lazy var statusLabel: UILabel = {
+    private lazy var _statusLabel: UILabel = {
         return setupLabelTitle(for: "Status:")
     }()
-    private lazy var serialLabel: UILabel = {
+    private lazy var _serialLabel: UILabel = {
         return setupLabelTitle(for: "Serial:")
     }()
-    private lazy var macAddressLabel: UILabel = {
+    private lazy var _macAddressLabel: UILabel = {
         return setupLabelTitle(for: "Mac Address:")
     }()
-    private lazy var deviceFamilyLabel: UILabel = {
+    private lazy var _deviceFamilyLabel: UILabel = {
         return setupLabelTitle(for: "Device Family:")
     }()
-    private lazy var fwVersionLabel: UILabel = {
+    private lazy var _fwVersionLabel: UILabel = {
         return setupLabelTitle(for: "FW version:")
     }()
-    private lazy var uAppVersionLabel: UILabel = {
+    private lazy var _uAppVersionLabel: UILabel = {
         return setupLabelTitle(for: "uApp version:")
     }()
     
     
-    private lazy var name: UILabel = {
+    private lazy var _name: UILabel = {
         return setupLabelTitle(for: self.model.peripheralDevice.name ?? "Unknown")
     }()
-    private lazy var status: UILabel = {
+    private lazy var _status: UILabel = {
         switch self.model.peripheralDevice.state {
         case .disconnected:
             return setupLabelTitle(for: "Disconnected")
@@ -81,23 +81,23 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
         }
         
     }()
-    private lazy var serial: UILabel = {
+    private lazy var _serial: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
-    private lazy var macAddress: UILabel = {
+    private lazy var _macAddress: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
-    private lazy var deviceFamily: UILabel = {
+    private lazy var _deviceFamily: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
-    private lazy var fwVersion: UILabel = {
+    private lazy var _fwVersion: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
-    private lazy var uAppVersion: UILabel = {
+    private lazy var _uAppVersion: UILabel = {
         return setupLabelTitle(for: "Unknown")
     }()
     
-    private lazy var turnTheNeedleButton: UIButton = {
+    private lazy var _turnTheNeedleButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("Turn the needle", for: .normal)
         btn.setTitleColor(UIColor.blue, for: .normal)
@@ -105,7 +105,7 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
         btn.addTarget(self, action: #selector(turnTheNeedle(_:)), for: .touchUpInside)
         return btn
     }()
-    private lazy var changeConnectStateButton: UIButton = {
+    private lazy var _changeConnectStateButton: UIButton = {
         let btn = UIButton()
         btn.setTitle("Cancel Connect", for: .normal)
         btn.setTitleColor(UIColor.blue, for: .normal)
@@ -115,12 +115,12 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     }()
     
     
-    private lazy var titleBound = UIView()
-    private lazy var contentBound = UIView()
+    private lazy var _titleBound = UIView()
+    private lazy var _contentBound = UIView()
     
     
     @objc private func turnTheNeedle(_ sender: UIButton) {
-        guard let characteristic = self.turnNeedleCharacteristic else { return }
+        guard let characteristic = self._turnNeedleCharacteristic else { return }
         self.presenter?.writeCommandSample(to: self.model.peripheralDevice, for: characteristic)
     }
     
@@ -128,16 +128,16 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
         switch self.model.peripheralDevice.state {
         case .disconnected:
             self.delegate?.showDetailView(willChangeState: .connected, for: self.model.peripheralDevice)
-            self.status.text = "Connecting"
+            self._status.text = "Connecting"
         case .connecting:
             self.delegate?.showDetailView(willChangeState: .disconnected, for: self.model.peripheralDevice)
-            self.status.text = "Disconnecting"
+            self._status.text = "Disconnecting"
         case .connected:
             self.delegate?.showDetailView(willChangeState: .disconnected, for: self.model.peripheralDevice)
-            self.status.text = "Disconnecting"
+            self._status.text = "Disconnecting"
         case .disconnecting:
             self.delegate?.showDetailView(willChangeState: .connected, for: self.model.peripheralDevice)
-            self.status.text = "Connecting"
+            self._status.text = "Connecting"
         }
     }
     
@@ -154,131 +154,131 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     
     private func setupView() {
         self.view.backgroundColor = .white
-        self.view.addSubview(self.titleBound)
-        self.view.addSubview(self.contentBound)
-        self.view.addSubview(self.turnTheNeedleButton)
-        self.view.addSubview(self.changeConnectStateButton)
+        self.view.addSubview(self._titleBound)
+        self.view.addSubview(self._contentBound)
+        self.view.addSubview(self._turnTheNeedleButton)
+        self.view.addSubview(self._changeConnectStateButton)
         
         self.setupTitle()
         self.setupContent()
         
-        self.titleBound.snp.makeConstraints { (make) in
+        self._titleBound.snp.makeConstraints { (make) in
             make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top).offset(ShowDetailViewController.PADDING)
             make.left.equalToSuperview().offset(ShowDetailViewController.PADDING)
             make.width.height.greaterThanOrEqualTo(0)
         }
         
-        self.contentBound.snp.makeConstraints { (make) in
+        self._contentBound.snp.makeConstraints { (make) in
             make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top).offset(ShowDetailViewController.PADDING)
-            make.left.equalTo(self.titleBound.snp.right).offset(ShowDetailViewController.PADDING)
+            make.left.equalTo(self._titleBound.snp.right).offset(ShowDetailViewController.PADDING)
             make.right.equalToSuperview()
             make.width.greaterThanOrEqualTo(0)
         }
         
-        self.turnTheNeedleButton.snp.makeConstraints { (make) in
-            make.top.equalTo(self.contentBound.snp.bottom).offset(20)
+        self._turnTheNeedleButton.snp.makeConstraints { (make) in
+            make.top.equalTo(self._contentBound.snp.bottom).offset(20)
             make.width.height.greaterThanOrEqualTo(0)
             make.centerX.equalToSuperview()
         }
         
-        self.changeConnectStateButton.snp.makeConstraints { (make) in
-            make.top.equalTo(self.turnTheNeedleButton.snp.bottom).offset(20)
+        self._changeConnectStateButton.snp.makeConstraints { (make) in
+            make.top.equalTo(self._turnTheNeedleButton.snp.bottom).offset(20)
             make.width.height.greaterThanOrEqualTo(0)
             make.centerX.equalToSuperview()
         }
     }
     
     private func setupTitle() {
-        self.titleBound.addSubview(self.nameLabel)
-        self.titleBound.addSubview(self.statusLabel)
-        self.titleBound.addSubview(self.serialLabel)
-        self.titleBound.addSubview(self.macAddressLabel)
-        self.titleBound.addSubview(self.deviceFamilyLabel)
-        self.titleBound.addSubview(self.fwVersionLabel)
-        self.titleBound.addSubview(self.uAppVersionLabel)
+        self._titleBound.addSubview(self._nameLabel)
+        self._titleBound.addSubview(self._statusLabel)
+        self._titleBound.addSubview(self._serialLabel)
+        self._titleBound.addSubview(self._macAddressLabel)
+        self._titleBound.addSubview(self._deviceFamilyLabel)
+        self._titleBound.addSubview(self._fwVersionLabel)
+        self._titleBound.addSubview(self._uAppVersionLabel)
         
-        self.nameLabel.snp.makeConstraints { (make) in
+        self._nameLabel.snp.makeConstraints { (make) in
             make.left.top.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
         }
         
-        self.statusLabel.snp.makeConstraints { (make) in
+        self._statusLabel.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.nameLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._nameLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
 
-        self.serialLabel.snp.makeConstraints { (make) in
+        self._serialLabel.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.statusLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._statusLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
-        self.macAddressLabel.snp.makeConstraints { (make) in
+        self._macAddressLabel.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.serialLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._serialLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
             make.right.equalToSuperview().priority(ConstraintPriority.medium)
         }
-        self.deviceFamilyLabel.snp.makeConstraints { (make) in
+        self._deviceFamilyLabel.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.macAddressLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._macAddressLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
-        self.fwVersionLabel.snp.makeConstraints { (make) in
+        self._fwVersionLabel.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.deviceFamilyLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._deviceFamilyLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
-        self.uAppVersionLabel.snp.makeConstraints { (make) in
+        self._uAppVersionLabel.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.fwVersionLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._fwVersionLabel.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
             make.bottom.equalToSuperview().priority(ConstraintPriority.medium)
         }
     }
     
     private func setupContent() {
-        self.contentBound.addSubview(self.name)
-        self.contentBound.addSubview(self.status)
-        self.contentBound.addSubview(self.serial)
-        self.contentBound.addSubview(self.macAddress)
-        self.contentBound.addSubview(self.deviceFamily)
-        self.contentBound.addSubview(self.fwVersion)
-        self.contentBound.addSubview(self.uAppVersion)
+        self._contentBound.addSubview(self._name)
+        self._contentBound.addSubview(self._status)
+        self._contentBound.addSubview(self._serial)
+        self._contentBound.addSubview(self._macAddress)
+        self._contentBound.addSubview(self._deviceFamily)
+        self._contentBound.addSubview(self._fwVersion)
+        self._contentBound.addSubview(self._uAppVersion)
         
-        self.name.snp.makeConstraints { (make) in
+        self._name.snp.makeConstraints { (make) in
             make.left.top.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
         }
-        self.status.snp.makeConstraints { (make) in
+        self._status.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.name.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._name.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
-        self.serial.snp.makeConstraints { (make) in
+        self._serial.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.status.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._status.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
-        self.macAddress.snp.makeConstraints { (make) in
+        self._macAddress.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.serial.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._serial.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
-        self.deviceFamily.snp.makeConstraints { (make) in
+        self._deviceFamily.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.macAddress.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._macAddress.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
-        self.fwVersion.snp.makeConstraints { (make) in
+        self._fwVersion.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.deviceFamily.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._deviceFamily.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
         }
-        self.uAppVersion.snp.makeConstraints { (make) in
+        self._uAppVersion.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
-            make.top.equalTo(self.fwVersion.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
+            make.top.equalTo(self._fwVersion.snp.bottom).offset(ShowDetailViewController.LINE_GAP)
             make.bottom.equalToSuperview().priority(ConstraintPriority.medium)
         }
     }
@@ -326,7 +326,7 @@ extension ShowDetailViewController: CBPeripheralDelegate {
             }
             
             if $0.properties.contains(.write) {
-                self.turnNeedleCharacteristic = $0
+                self._turnNeedleCharacteristic = $0
             }
         }
     }
@@ -337,15 +337,15 @@ extension ShowDetailViewController: CBPeripheralDelegate {
         case kDEVICE_INFORMATION_MANUFACTURER_NAME_STRING:
             guard let data = characteristic.value else { return }
             let manufacturerNameString = String(data: data, encoding: .utf8)
-            self.macAddress.text = manufacturerNameString
+            self._macAddress.text = manufacturerNameString
         case kDEVICE_INFORMATION_SERIAL_VERSION_STRING:
             guard let data = characteristic.value else { return }
             let manufacturerNameString = String(data: data, encoding: .utf8)
-            self.serial.text = manufacturerNameString
+            self._serial.text = manufacturerNameString
         case kDEVICE_INFORMATION_FW_REVISION_STRING:
             guard let data = characteristic.value else { return }
             let manufacturerNameString = String(data: data, encoding: .utf8)
-            self.fwVersion.text = manufacturerNameString
+            self._fwVersion.text = manufacturerNameString
         default:
             break
         }
@@ -356,17 +356,17 @@ extension ShowDetailViewController: ShowAllViewDelegate {
     func showAllView(didChangeStatus status: CBPeripheralState) {
         switch status {
         case .disconnected:
-            self.status.text = "Disconnected"
-            self.changeConnectStateButton.setTitle("Connect", for: .normal)
+            self._status.text = "Disconnected"
+            self._changeConnectStateButton.setTitle("Connect", for: .normal)
         case .connecting:
-            self.status.text = "Connecting"
-            self.changeConnectStateButton.setTitle("Cancel Connect", for: .normal)
+            self._status.text = "Connecting"
+            self._changeConnectStateButton.setTitle("Cancel Connect", for: .normal)
         case .connected:
-            self.status.text = "Connected"
-            self.changeConnectStateButton.setTitle("Disconnect", for: .normal)
+            self._status.text = "Connected"
+            self._changeConnectStateButton.setTitle("Disconnect", for: .normal)
         case .disconnecting:
-            self.status.text = "Disconnecting"
-            self.changeConnectStateButton.setTitle("Cancel Disconnect", for: .normal)
+            self._status.text = "Disconnecting"
+            self._changeConnectStateButton.setTitle("Cancel Disconnect", for: .normal)
         }
     }
 }

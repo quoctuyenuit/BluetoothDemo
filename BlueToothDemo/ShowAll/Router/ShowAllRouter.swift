@@ -24,7 +24,7 @@ class ShowAllRouter: ShowAllRouterProtocol {
         return UINavigationController(rootViewController: view)
     }
   
-    func showDeviceInformationDetail(from viewController: UIViewController, item: PeripheralDevice) -> ShowAllViewDelegate? {
+    func showDetailPeripheralDevice(from viewController: UIViewController, item: PeripheralDevice) -> ShowAllViewDelegate? {
         let detailViewController = ShowDetailRouter.createShowDetailViewController(for: item)
         let showDetailViewController = detailViewController as? ShowDetailViewController
         showDetailViewController?.delegate  = viewController as? ShowDetailViewDelegate

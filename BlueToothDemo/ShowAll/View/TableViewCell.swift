@@ -17,22 +17,22 @@ class TableViewCell: UITableViewCell {
 
     var delegate: TableViewCellDelegate?
     
-    private var peripheralDevice: PeripheralDevice?
+    private var _peripheralDevice: PeripheralDevice?
     
-    private var isChecked = false {
+    private var _isChecked = false {
         didSet {
-            let img = self.isChecked ? UIImage(named: "ico_rating_checked"): UIImage(named: "ico_rating_unchecked")
-            self.favoriteIcon.setImage(img, for: .normal)
+            let img = self._isChecked ? UIImage(named: "ico_rating_checked"): UIImage(named: "ico_rating_unchecked")
+            self._favoriteIcon.setImage(img, for: .normal)
         }
     }
-    private lazy var favoriteIcon: UIButton = {
+    private lazy var _favoriteIcon: UIButton = {
         let icon = UIButton()
         icon.setImage(UIImage(named: "ico_rating_unchecked"), for: .normal)
         icon.addTarget(self, action: #selector(checkTapped(_:)), for: .touchUpInside)
         return icon
     }()
     
-    private lazy var nameLabel: UILabel = {
+    private lazy var _nameLabel: UILabel = {
         let label = UILabel()
         label.textColor = .black
         label.font = UIFont.systemFont(ofSize: 16)
@@ -40,7 +40,7 @@ class TableViewCell: UITableViewCell {
         return label
     }()
     
-    private lazy var serialLabel: UILabel = {
+    private lazy var _serialLabel: UILabel = {
         let label = UILabel()
         label.textColor = .black
         label.font = UIFont.systemFont(ofSize: 16)
@@ -48,7 +48,7 @@ class TableViewCell: UITableViewCell {
         return label
     }()
     
-    private lazy var statusLabel: UILabel = {
+    private lazy var _statusLabel: UILabel = {
         let label = UILabel()
         label.textColor = .black
         label.font = UIFont.systemFont(ofSize: 16)
@@ -56,7 +56,7 @@ class TableViewCell: UITableViewCell {
         return label
     }()
     
-    private lazy var macAddressLabel: UILabel = {
+    private lazy var _macAddressLabel: UILabel = {
         let label = UILabel()
         label.textColor = .black
         label.font = UIFont.systemFont(ofSize: 14)
@@ -64,7 +64,7 @@ class TableViewCell: UITableViewCell {
         return label
     }()
     
-    private lazy var rssiLabel: UILabel = {
+    private lazy var _rssiLabel: UILabel = {
         let label = UILabel()
         label.textColor = .black
         label.font = UIFont.systemFont(ofSize: 14)
@@ -72,19 +72,13 @@ class TableViewCell: UITableViewCell {
         return label
     }()
     
-    private lazy var contentBoundView = UIView()
+    private lazy var _contentBoundView = UIView()
     
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
     }
 
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
-    }
-    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.setupView()
@@ -96,79 +90,79 @@ class TableViewCell: UITableViewCell {
     }
     
     private func setupView() {
-        self.addSubview(self.favoriteIcon)
-        self.addSubview(self.contentBoundView)
-        self.contentBoundView.addSubview(self.nameLabel)
-        self.contentBoundView.addSubview(self.statusLabel)
-        self.contentBoundView.addSubview(self.rssiLabel)
-        self.contentBoundView.addSubview(self.macAddressLabel)
+        self.addSubview(self._favoriteIcon)
+        self.addSubview(self._contentBoundView)
+        self._contentBoundView.addSubview(self._nameLabel)
+        self._contentBoundView.addSubview(self._statusLabel)
+        self._contentBoundView.addSubview(self._rssiLabel)
+        self._contentBoundView.addSubview(self._macAddressLabel)
         
-        self.favoriteIcon.snp.makeConstraints { (make) in
+        self._favoriteIcon.snp.makeConstraints { (make) in
             make.left.equalTo(20)
             make.width.height.equalTo(30)
             make.centerY.equalToSuperview()
         }
         
-        self.nameLabel.snp.makeConstraints { (make) in
+        self._nameLabel.snp.makeConstraints { (make) in
             make.left.top.equalToSuperview()
             make.width.height.greaterThanOrEqualTo(0)
         }
         
-        self.statusLabel.snp.makeConstraints { (make) in
+        self._statusLabel.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
-            make.top.equalTo(self.nameLabel.snp.bottom).offset(6)
+            make.top.equalTo(self._nameLabel.snp.bottom).offset(6)
             make.width.height.greaterThanOrEqualTo(0)
         }
         
-        self.rssiLabel.snp.makeConstraints { (make) in
-            make.top.equalTo(self.statusLabel.snp.top)
+        self._rssiLabel.snp.makeConstraints { (make) in
+            make.top.equalTo(self._statusLabel.snp.top)
             make.right.equalToSuperview().offset(-10)
             make.width.height.greaterThanOrEqualTo(0)
         }
         
-        self.macAddressLabel.snp.makeConstraints { (make) in
+        self._macAddressLabel.snp.makeConstraints { (make) in
             make.left.right.equalToSuperview()
-            make.top.equalTo(self.statusLabel.snp.bottom).offset(6)
+            make.top.equalTo(self._statusLabel.snp.bottom).offset(6)
             make.bottom.equalToSuperview().priority(.medium)
             make.height.greaterThanOrEqualTo(0)
         }
         
-        self.contentBoundView.snp.makeConstraints { (make) in
-            make.left.equalTo(self.favoriteIcon.snp.right).offset(20)
+        self._contentBoundView.snp.makeConstraints { (make) in
+            make.left.equalTo(self._favoriteIcon.snp.right).offset(20)
             make.right.equalToSuperview()
             make.top.equalToSuperview().offset(10)
             make.bottom.equalToSuperview().offset(-10)
         }
     }
     
-    public func updateData(for model: PeripheralDevice) {
+    public func configCell(for model: PeripheralDevice) {
         
         if let name = model.peripheralDevice.name, !name.isEmpty {
-            self.nameLabel.text = "\(name) - \(model.serialString)"
+            self._nameLabel.text = "\(name) - \(model.serialString)"
         } else {
-            self.nameLabel.text = "Unknown - \(model.serialString)"
+            self._nameLabel.text = "Unknown - \(model.serialString)"
         }
         
         switch model.peripheralDevice.state {
         case .disconnected:
-            self.statusLabel.text = "Disconnected"
+            self._statusLabel.text = "Disconnected"
         case .connecting:
-            self.statusLabel.text = "Connecting"
+            self._statusLabel.text = "Connecting"
         case .connected:
-            self.statusLabel.text = "Connected"
+            self._statusLabel.text = "Connected"
         case .disconnecting:
-            self.statusLabel.text = "Disconnecting"
+            self._statusLabel.text = "Disconnecting"
         }
         
-        self.rssiLabel.text = "\(model.rssi)"
-        self.macAddressLabel.text = model.peripheralDevice.identifier.uuidString
-        self.isChecked = model.isFavorite
-        self.peripheralDevice = model
+        self._rssiLabel.text = "\(model.rssi)"
+        self._macAddressLabel.text = model.peripheralDevice.identifier.uuidString
+        self._isChecked = model.isFavorite
+        self._peripheralDevice = model
     }
     
     @objc private func checkTapped(_ sender: UIButton) {
-        self.isChecked = !self.isChecked
-        self.peripheralDevice?.isFavorite = self.isChecked
+        self._isChecked = !self._isChecked
+        self._peripheralDevice?.isFavorite = self._isChecked
     }
 
 }

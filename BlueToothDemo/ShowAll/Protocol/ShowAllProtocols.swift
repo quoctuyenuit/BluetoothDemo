@@ -17,12 +17,12 @@ protocol ShowAllPresenterProtocol {
     var interactor: ShowAllInteractorProtocol? { get set }
     var router: ShowAllRouterProtocol? { get set }
     
-    func selectElement(from viewController: UIViewController, item: PeripheralDevice) -> ShowAllViewDelegate?
+    func showDetailPeripheralDevice(from viewController: UIViewController, item: PeripheralDevice) -> ShowAllViewDelegate?
 }
 protocol ShowAllInteractorProtocol {
     
 }
 protocol ShowAllRouterProtocol {
     static func createShowAllViewController() -> UIViewController
-    func showDeviceInformationDetail(from viewController: UIViewController, item: PeripheralDevice) -> ShowAllViewDelegate?
+    func showDetailPeripheralDevice(from viewController: UIViewController, item: PeripheralDevice) -> ShowAllViewDelegate?
 }
