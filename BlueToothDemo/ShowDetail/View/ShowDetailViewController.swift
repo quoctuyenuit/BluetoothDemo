@@ -18,6 +18,8 @@ import CoreBluetooth
  
  - model: biến chứa thông tin item cần show detail
  
+ - _turnNeedleCharacteristic: Characteristic xoay kim đồng hồ dùng để lưu lại khi cần write command xoay kim
+ 
  - kCHARACTERISTIC_MISFIT_BUUID: BUUID để lọc characteristic xoay kim
  
  - kDEVICE_INFORMATION_MANUFACTURER_NAME_STRING: BUUID để lấy thông Manufacturer name
@@ -25,8 +27,6 @@ import CoreBluetooth
  - kDEVICE_INFORMATION_SERIAL_VERSION_STRING: BUUID để lấy serial number
  
  - kDEVICE_INFORMATION_FW_REVISION_STRING: BUUID để lấy Firmware Revision string
- 
- - _turnNeedleCharacteristic: Characteristic xoay kim đồng hồ dùng để lưu lại khi cần write command xoay kim
  */
 
 protocol ShowDetailViewDelegate {
@@ -39,48 +39,33 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     //MARK: - Common properties
     var presenter: ShowDetailPresenterProtocol?
     public var delegate: ShowDetailViewDelegate?
-    private var _model: PeripheralDevice!
+    
     private static let LINE_GAP: CGFloat = 10
     private static let PADDING: CGFloat = 30
     private let kCHARACTERISTIC_MISFIT_BUUID = CBUUID(nsuuid: UUID(uuidString: "3dda0002-957f-7d4a-34a6-74696673696d")!)
-    private let kDEVICE_INFORMATION_MANUFACTURER_NAME_STRING = CBUUID(string: "2A29")
+    private let kDEVICE_INFORMATION_MANUFACTURER_NAME_STRING = CBUUID(string: "2A50")
     private let kDEVICE_INFORMATION_SERIAL_VERSION_STRING = CBUUID(string: "2A25")
     private let kDEVICE_INFORMATION_FW_REVISION_STRING = CBUUID(string: "2A26")
     
+    private var _model: PeripheralDevice!
     private var _turnNeedleCharacteristic: CBCharacteristic?
     
-    private lazy var _nameLabel: UILabel = {
-        return setupLabelTitle(for: "Name:")
-    }()
+    private lazy var _nameLabel: UILabel = setupLabelTitle(for: "Name:")
     
-    private lazy var _statusLabel: UILabel = {
-        return setupLabelTitle(for: "Status:")
-    }()
+    private lazy var _statusLabel: UILabel = setupLabelTitle(for: "Status:")
     
-    private lazy var _serialLabel: UILabel = {
-        return setupLabelTitle(for: "Serial:")
-    }()
+    private lazy var _serialLabel: UILabel = setupLabelTitle(for: "Serial:")
     
-    private lazy var _macAddressLabel: UILabel = {
-        return setupLabelTitle(for: "Mac Address:")
-    }()
+    private lazy var _macAddressLabel: UILabel = setupLabelTitle(for: "Mac Address:")
     
-    private lazy var _deviceFamilyLabel: UILabel = {
-        return setupLabelTitle(for: "Device Family:")
-    }()
+    private lazy var _deviceFamilyLabel: UILabel = setupLabelTitle(for: "Device Family:")
     
-    private lazy var _fwVersionLabel: UILabel = {
-        return setupLabelTitle(for: "FW version:")
-    }()
+    private lazy var _fwVersionLabel: UILabel = setupLabelTitle(for: "FW version:")
     
-    private lazy var _uAppVersionLabel: UILabel = {
-        return setupLabelTitle(for: "uApp version:")
-    }()
+    private lazy var _uAppVersionLabel: UILabel = setupLabelTitle(for: "uApp version:")
     
     
-    private lazy var _name: UILabel = {
-        return setupLabelTitle(for: self._model.peripheralDevice.name ?? "Unknown")
-    }()
+    private lazy var _name: UILabel = setupLabelTitle(for: self._model.peripheralDevice.name ?? "Unknown")
     
     private lazy var _status: UILabel = {
         switch self._model.peripheralDevice.state {
@@ -93,28 +78,21 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
         case .disconnecting:
             return setupLabelTitle(for: "Disconnecting")
         }
-        
     }()
     
-    private lazy var _serial: UILabel = {
-        return setupLabelTitle(for: "Unknown")
-    }()
+    private lazy var _serial: UILabel = setupLabelTitle(for: "Unknown")
     
-    private lazy var _macAddress: UILabel = {
-        return setupLabelTitle(for: "Unknown")
-    }()
+    private lazy var _macAddress: UILabel = setupLabelTitle(for: "Unknown")
     
-    private lazy var _deviceFamily: UILabel = {
-        return setupLabelTitle(for: "Unknown")
-    }()
+    private lazy var _deviceFamily: UILabel = setupLabelTitle(for: "Unknown")
     
-    private lazy var _fwVersion: UILabel = {
-        return setupLabelTitle(for: "Unknown")
-    }()
+    private lazy var _fwVersion: UILabel = setupLabelTitle(for: "Unknown")
     
-    private lazy var _uAppVersion: UILabel = {
-        return setupLabelTitle(for: "Unknown")
-    }()
+    private lazy var _uAppVersion: UILabel = setupLabelTitle(for: "Unknown")
+    
+    private lazy var _titleBound = UIView()
+    
+    private lazy var _contentBound = UIView()
     
     private lazy var _turnTheNeedleButton: UIButton = {
         let btn = UIButton()
@@ -134,11 +112,6 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
         return btn
     }()
     
-    
-    private lazy var _titleBound = UIView()
-    private lazy var _contentBound = UIView()
-    
-    
     @objc private func turnTheNeedle(_ sender: UIButton) {
         guard let characteristic = self._turnNeedleCharacteristic else { return }
         self.presenter?.writeCommandSample(to: self._model.peripheralDevice, for: characteristic)
@@ -147,17 +120,25 @@ class ShowDetailViewController: UIViewController, ShowDetailViewProtocol {
     @objc private func changeConnectTapped(_ sender: UIButton) {
         switch self._model.peripheralDevice.state {
         case .disconnected:
-            self.delegate?.showDetailView(willChangeState: .connected, for: self._model.peripheralDevice)
+            self.delegate?.showDetailView(willChangeState: CBPeripheralState.connected,
+                                          for: self._model.peripheralDevice)
             self._status.text = "Connecting"
+            self._changeConnectStateButton.setTitle("Cancel Connect", for: UIControl.State.normal)
         case .connecting:
-            self.delegate?.showDetailView(willChangeState: .disconnected, for: self._model.peripheralDevice)
+            self.delegate?.showDetailView(willChangeState: CBPeripheralState.disconnected,
+                                          for: self._model.peripheralDevice)
             self._status.text = "Disconnecting"
+            self._changeConnectStateButton.setTitle("Cancel Disconnect", for: UIControl.State.normal)
         case .connected:
-            self.delegate?.showDetailView(willChangeState: .disconnected, for: self._model.peripheralDevice)
+            self.delegate?.showDetailView(willChangeState: CBPeripheralState.disconnected,
+                                          for: self._model.peripheralDevice)
             self._status.text = "Disconnecting"
+            self._changeConnectStateButton.setTitle("Cancel Disconnect", for: UIControl.State.normal)
         case .disconnecting:
-            self.delegate?.showDetailView(willChangeState: .connected, for: self._model.peripheralDevice)
+            self.delegate?.showDetailView(willChangeState: CBPeripheralState.connected,
+                                          for: self._model.peripheralDevice)
             self._status.text = "Connecting"
+            self._changeConnectStateButton.setTitle("Cancel Connect", for: UIControl.State.normal)
         }
     }
     
@@ -337,35 +318,39 @@ extension ShowDetailViewController: CBPeripheralDelegate {
         guard let characteristics = service.characteristics else { return }
         
         characteristics.forEach {
-            if $0.properties.contains(.read) {
+            if $0.properties.contains(CBCharacteristicProperties.read) {
                 peripheral.readValue(for: $0)
             }
             
-            if $0.properties.contains(.notify) {
+            if $0.properties.contains(CBCharacteristicProperties.notify) {
                 peripheral.setNotifyValue(true, for: $0)
             }
             
-            if $0.properties.contains(.write) {
+            if $0.properties.contains(CBCharacteristicProperties.write) {
                 self._turnNeedleCharacteristic = $0
             }
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        print(characteristic)
+        
         switch characteristic.uuid {
+        
         case kDEVICE_INFORMATION_MANUFACTURER_NAME_STRING:
             guard let data = characteristic.value else { return }
-            let manufacturerNameString = String(data: data, encoding: .utf8)
+            let manufacturerNameString = String(data: data, encoding: String.Encoding.utf8)
             self._macAddress.text = manufacturerNameString
+        
         case kDEVICE_INFORMATION_SERIAL_VERSION_STRING:
             guard let data = characteristic.value else { return }
-            let manufacturerNameString = String(data: data, encoding: .utf8)
+            let manufacturerNameString = String(data: data, encoding: String.Encoding.utf8)
             self._serial.text = manufacturerNameString
+        
         case kDEVICE_INFORMATION_FW_REVISION_STRING:
             guard let data = characteristic.value else { return }
-            let manufacturerNameString = String(data: data, encoding: .utf8)
+            let manufacturerNameString = String(data: data, encoding: String.Encoding.utf8)
             self._fwVersion.text = manufacturerNameString
+        
         default:
             break
         }
@@ -375,18 +360,22 @@ extension ShowDetailViewController: CBPeripheralDelegate {
 extension ShowDetailViewController: ShowAllViewDelegate {
     func showAllView(didChangeStatus status: CBPeripheralState) {
         switch status {
+        
         case .disconnected:
             self._status.text = "Disconnected"
-            self._changeConnectStateButton.setTitle("Connect", for: .normal)
+            self._changeConnectStateButton.setTitle("Connect", for: UIControl.State.normal)
+        
         case .connecting:
             self._status.text = "Connecting"
-            self._changeConnectStateButton.setTitle("Cancel Connect", for: .normal)
+            self._changeConnectStateButton.setTitle("Cancel Connect", for: UIControl.State.normal)
+        
         case .connected:
             self._status.text = "Connected"
-            self._changeConnectStateButton.setTitle("Disconnect", for: .normal)
+            self._changeConnectStateButton.setTitle("Disconnect", for: UIControl.State.normal)
+        
         case .disconnecting:
             self._status.text = "Disconnecting"
-            self._changeConnectStateButton.setTitle("Cancel Disconnect", for: .normal)
+            self._changeConnectStateButton.setTitle("Cancel Disconnect", for: UIControl.State.normal)
         }
     }
 }
